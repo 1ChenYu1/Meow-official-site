@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>喵喵Star ★ MIAOMIAO STAR — TAKE YOUR STAR</title>
+<meta name="description" content="喵喵Star — RPG 游戏开发工作室。WE CRAFT RPG WORLDS ★">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Noto+Sans+SC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E60012;
+  --black:#000000;
+  --white:#FFFFFF;
+  --gold:#FFD700;
+  --navy:#0a0a1a;
+  --edge:6px solid var(--black);
+  --skew:polygon(0 0,100% 0,100% 82%,0 100%);
+  --skew-rev:polygon(0 18%,100% 0,100% 100%,0 100%);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--black);
+  color:var(--white);
+  font-family:'Archivo Black','Noto Sans SC',Impact,sans-serif;
+  font-weight:900;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body.no-scroll{overflow:hidden}
+::selection{background:var(--red);color:var(--white)}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font-family:inherit}
+
+/* ============ SHARED TYPE ============ */
+.outline{
+  color:var(--white);
+  text-shadow:
+    -4px -4px 0 var(--black),4px -4px 0 var(--black),
+    -4px 4px 0 var(--black),4px 4px 0 var(--black),
+    0 8px 0 var(--black), 0 0 22px rgba(0,0,0,.9);
+}
+.sec-title{
+  font-size:clamp(2.1rem,6.2vw,4.6rem);
+  letter-spacing:.02em;
+  line-height:.95;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:.35em;flex-wrap:wrap;
+}
+.sec-title .bar{
+  display:block;width:clamp(14px,2.2vw,26px);height:clamp(2.6rem,6.2vw,4.6rem);
+  background:var(--red);border:4px solid var(--black);flex:none;
+}
+.dark .sec-title{color:var(--white);text-shadow:-4px -4px 0 var(--black),4px -4px 0 var(--black),-4px 4px 0 var(--black),4px 4px 0 var(--black)}
+.light .sec-title{color:var(--black);text-shadow:4px 4px 0 var(--red),-3px -3px 0 var(--black)}
+.zh{font-size:.46em;letter-spacing:.16em;opacity:.92}
+
+/* ============ CURSOR ============ */
+#cursor{
+  position:fixed;top:0;left:0;width:34px;height:34px;pointer-events:none;z-index:99999;
+  color:var(--red);font-size:26px;line-height:34px;text-align:center;
+  transform:translate(-50%,-50%);transition:opacity .2s;
+  will-change:transform;filter:drop-shadow(0 0 6px rgba(230,0,18,.85));
+}
+#cursor.small{transform:translate(-50%,-50%) scale(.5)}
+@media (hover:none),(max-width:900px){#cursor{display:none}}
+@media (hover:hover) and (pointer:fine){body,a,button,input,textarea,summary{cursor:none}}
+
+/* ============ LOADING ============ */
+#loader{
+  position:fixed;inset:0;z-index:10000;background:var(--black);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;
+}
+#loader .l-star{font-size:clamp(3rem,10vw,6rem);color:var(--red);animation:spinStar 1.6s linear infinite;line-height:1}
+@keyframes spinStar{to{transform:rotate(360deg)}}
+#loader .l-text{
+  font-size:clamp(1.5rem,4.4vw,2.6rem);letter-spacing:.3em;color:var(--white);
+  text-shadow:-3px -3px 0 var(--black),3px -3px 0 var(--black),-3px 3px 0 var(--black),3px 3px 0 var(--black);
+}
+.bar-wrap{width:min(78vw,520px);height:34px;border:5px solid var(--white);padding:4px;background:var(--black)}
+.bar-fill{height:100%;width:0%;background:var(--red);box-shadow:0 0 14px var(--red)}
+.bar-pct{font-size:1rem;letter-spacing:.2em;color:var(--gold)}
+#flash{
+  position:fixed;inset:0;background:var(--white);z-index:10001;opacity:0;pointer-events:none;
+}
+#flash.go{animation:flashOut .55s ease-out forwards}
+@keyframes flashOut{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+
+/* ============ NAV ============ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:9000;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(6px);
+  border-bottom:6px solid var(--red);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.6rem clamp(1rem,3vw,2.2rem);
+}
+.logo{font-size:clamp(1.05rem,3.4vw,1.5rem);letter-spacing:.04em;display:flex;align-items:center;gap:.4rem;white-space:nowrap}
+.logo .s{color:var(--red);display:inline-block;animation:pulseStar 1.8s ease-in-out infinite}
+@keyframes pulseStar{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.28) rotate(22deg)}}
+.nav-menu{display:flex;gap:.2rem;list-style:none;align-items:center}
+.nav-menu a{
+  display:block;position:relative;padding:.55rem .85rem;font-size:.9rem;letter-spacing:.12em;
+  color:var(--white);text-transform:uppercase;transition:color .16s;
+}
+.nav-menu a::after{
+  content:"";position:absolute;left:.85rem;right:.85rem;bottom:.25rem;height:4px;background:var(--red);
+  transform:scaleX(0);transform-origin:left;transition:transform .2s ease;
+}
+.nav-menu a:hover{color:var(--red);animation:jitter .22s steps(2) infinite}
+.nav-menu a:hover::after{transform:scaleX(1)}
+.nav-menu a.active{background:var(--red);color:var(--white);animation:jitter .5s steps(2) infinite}
+.nav-menu a.active::after{transform:scaleX(1);background:var(--white)}
+@keyframes jitter{
+  0%{transform:translate(0,0)}
+  50%{transform:translate(-1.5px,1.5px)}
+  100%{transform:translate(1.5px,-1px)}
+}
+.burger{
+  display:none;background:var(--red);color:var(--white);border:4px solid var(--white);
+  font-size:.85rem;letter-spacing:.1em;padding:.5rem .7rem;box-shadow:4px 4px 0 var(--black);
+}
+.burger:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--black)}
+
+/* mobile overlay */
+#mobileMenu{
+  position:fixed;inset:0;z-index:9500;background:var(--black);
+  clip-path:polygon(0 0,100% 0,100% 0,0 0);
+  transition:clip-path .45s cubic-bezier(.7,0,.2,1);
+  display:flex;flex-direction:column;justify-content:center;gap:.4rem;padding:2rem;
+}
+#mobileMenu.open{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+#mobileMenu a{
+  font-size:clamp(1.8rem,10vw,3rem);color:var(--white);padding:.5rem 0;
+  border-bottom:4px solid var(--red);text-transform:uppercase;
+}
+#mobileMenu a:hover,#mobileMenu a:active{color:var(--red);animation:jitter .2s steps(2) infinite}
+#mobileMenu .close{position:absolute;top:1rem;right:1rem;background:var(--red);color:var(--white);border:4px solid var(--white);padding:.5rem .8rem;font-size:.9rem}
+
+/* ============ SKEW / SHAPES ============ */
+.skew-top{clip-path:var(--skew)}
+.skew-top-rev{clip-path:var(--skew-rev)}
+.skew-block{
+  position:absolute;inset:auto;background:var(--red);z-index:0;opacity:.95;
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+}
+
+/* ============ REVEAL ============ */
+.reveal{opacity:0;transform:translate(70px,-70px) rotate(-4deg);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.9,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* ============ HERO ============ */
+#hero{
+  position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;
+  text-align:center;overflow:hidden;padding:7rem 1rem 6rem;isolation:isolate;
+}
+.speedlines{
+  position:absolute;inset:-20%;z-index:-3;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,
+    rgba(230,0,18,.55) 0deg .7deg, rgba(0,0,0,0) .7deg 3.2deg);
+  animation:spinSlow 60s linear infinite;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 18%,transparent 72%);
+  mask-image:radial-gradient(circle at 50% 50%,#000 18%,transparent 72%);
+}
+@keyframes spinSlow{to{transform:rotate(360deg)}}
+#hero::before{
+  content:"";position:absolute;inset:0;z-index:-2;
+  background:radial-gradient(circle at 50% 45%,rgba(230,0,18,.30),transparent 60%);
+}
+#p5host{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.hero-inner{position:relative;z-index:2;max-width:1200px;width:100%;opacity:0;transform:translateY(26px)}
+#hero.ready .hero-inner{opacity:1;transform:none;transition:opacity .7s ease,transform .7s cubic-bezier(.2,.9,.2,1)}
+.hero-star{
+  font-size:clamp(2.4rem,9vw,5rem);color:var(--red);line-height:1;
+  animation:starPop 2.6s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(230,0,18,.6));
+}
+@keyframes starPop{0%,100%{transform:scale(1) rotate(-8deg)}50%{transform:scale(1.15) rotate(8deg)}}
+h1.hero-title{
+  font-size:clamp(3rem,15.5vw,11rem);line-height:.85;letter-spacing:-.02em;text-transform:uppercase;
+  position:relative;margin:.1em 0 .18em;
+  text-shadow:
+    -7px -7px 0 var(--black),7px -7px 0 var(--black),-7px 7px 0 var(--black),7px 7px 0 var(--black),
+    0 0 40px rgba(230,0,18,.55);
+}
+.glitch{position:relative}
+.glitch::before,.glitch::after{
+  content:attr(data-text);position:absolute;left:0;top:0;width:100%;
+  pointer-events:none;
+}
+.glitch::before{color:var(--red);z-index:-1;animation:gl1 4s steps(1) infinite}
+.glitch::after{color:var(--gold);z-index:-1;animation:gl2 4s steps(1) infinite}
+.hero-en{
+  font-size:clamp(.62rem,2.1vw,.95rem);letter-spacing:.34em;color:var(--white);
+  text-shadow:3px 3px 0 var(--red);margin-bottom:.9rem;
+}
+@keyframes gl1{
+  0%,86%,100%{transform:none;opacity:0}
+  87%{transform:translate(-9px,4px) skewX(-12deg);opacity:.95;clip-path:polygon(0 12%,100% 12%,100% 42%,0 42%)}
+  90%{transform:translate(7px,-5px);opacity:.95;clip-path:polygon(0 55%,100% 55%,100% 88%,0 88%)}
+  93%{transform:translate(-5px,2px);opacity:0}
+}
+@keyframes gl2{
+  0%,89%,100%{transform:none;opacity:0}
+  90%{transform:translate(9px,-4px) skewX(10deg);opacity:.9;clip-path:polygon(0 20%,100% 20%,100% 50%,0 50%)}
+  94%{transform:translate(-6px,6px);opacity:.9;clip-path:polygon(0 60%,100% 60%,100% 95%,0 95%)}
+  96%{opacity:0}
+}
+.sub-title{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:.05em;
+  font-size:clamp(1rem,4.2vw,2.3rem);color:var(--red);letter-spacing:.24em;text-transform:uppercase;
+  text-shadow:3px 3px 0 var(--black);
+}
+.sub-title span{display:inline-block;opacity:0;transform:translateY(24px) rotate(-12deg);animation:pop .42s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes pop{to{opacity:1;transform:none}}
+.slogan{
+  margin-top:1.3rem;font-size:clamp(.72rem,2.3vw,1.15rem);letter-spacing:.3em;color:var(--white);
+  min-height:1.6em;
+}
+.slogan .caret{display:inline-block;width:.6em;background:var(--red);animation:blink .7s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero-tags{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.6rem}
+.tag{
+  border:4px solid var(--white);padding:.3rem .7rem;font-size:.7rem;letter-spacing:.2em;color:var(--white);
+  transition:.15s;
+}
+.tag:hover{background:var(--red);border-color:var(--red);animation:jitter .2s steps(2) infinite}
+.scroll-hint{
+  position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.3rem;z-index:3;
+  font-size:.66rem;letter-spacing:.28em;color:var(--white);
+}
+.scroll-hint .arrow{font-size:2rem;color:var(--red);animation:bounce 1.1s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(12px)}}
+
+/* ============ GAMES ============ */
+#games{position:relative;background:var(--white);color:var(--black);padding:clamp(3.5rem,8vw,7rem) 0 clamp(4rem,9vw,8rem);overflow:hidden}
+#games .slant{position:absolute;left:-5%;right:-5%;top:-8%;height:120px;background:var(--black);clip-path:polygon(0 0,100% 0,100% 100%,0 70%)}
+#games .slant.b{top:auto;bottom:-6%;background:var(--red);height:90px;clip-path:polygon(0 30%,100% 0,100% 100%,0 100%)}
+#games .wrap{position:relative;z-index:2;width:min(1200px,92vw);margin:0 auto}
+.grid-games{
+  --g:clamp(1.4rem,3vw,2.4rem);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--g);
+  margin-top:clamp(2rem,5vw,3.6rem);
+}
+.card{
+  position:relative;background:var(--black);border:6px solid var(--red);color:var(--white);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+  cursor:pointer;overflow:visible;
+}
+.card::before{
+  content:"★";position:absolute;top:50%;left:calc(100% + var(--g) / 2);
+  transform:translate(-50%,-50%);color:var(--red);font-size:clamp(.9rem,2.2vw,1.3rem);
+  display:none;pointer-events:none;z-index:6;
+}
+@media (min-width:1045px){
+  .card:not(:last-child)::before{display:block}
+}
+.card::after{
+  content:"";position:absolute;inset:0;background:var(--red);z-index:3;
+  clip-path:polygon(-30% -30%,10% -30%,-20% 130%);opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.card:hover{transform:rotate(-2deg);border-color:var(--gold);animation:jitter .18s steps(2) infinite;box-shadow:10px 10px 0 var(--gold)}
+.card:hover::after{opacity:.25}
+.cover{
+  height:clamp(140px,20vw,190px);display:flex;align-items:center;justify-content:center;
+  font-size:clamp(2.6rem,7vw,4rem);border-bottom:6px solid var(--red);position:relative;overflow:hidden;
+}
+.cover span{position:relative;z-index:2;filter:drop-shadow(4px 4px 0 var(--black));transition:transform .2s}
+.card:hover .cover span{transform:scale(1.22) rotate(-10deg)}
+.cover.g1{background:linear-gradient(135deg,#E60012 0%,#7a0008 60%,#000 100%)}
+.cover.g2{background:linear-gradient(135deg,#FFD700 0%,#E60012 55%,#000 100%)}
+.cover.g3{background:linear-gradient(135deg,#0a0a1a 0%,#E60012 70%,#FFD700 100%)}
+.cover.g4{background:linear-gradient(135deg,#000 0%,#3a0010 45%,#E60012 100%)}
+.cover::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg,rgba(0,0,0,.35) 0 10px,rgba(0,0,0,0) 10px 24px);
+}
+.card-body{padding:1.1rem 1.1rem 1.4rem;position:relative;z-index:2}
+.card-idx{position:absolute;top:-.6rem;right:.8rem;font-size:3.4rem;color:rgba(255,255,255,.12);line-height:1}
+.card-body h3{font-size:clamp(1.15rem,2.6vw,1.55rem);line-height:1.05;margin-bottom:.3rem;text-shadow:3px 3px 0 var(--red)}
+.card-en{font-size:.62rem;letter-spacing:.22em;color:var(--gold);margin-bottom:.6rem}
+.card-genre{font-size:.68rem;letter-spacing:.18em;color:var(--red);border:3px solid var(--red);display:inline-block;padding:.1rem .45rem;margin-bottom:.7rem}
+.card-body p{font-size:.72rem;line-height:1.6;font-weight:700;opacity:.8;letter-spacing:.02em}
+.divider-stars{display:flex;justify-content:center;gap:1rem;font-size:1rem;color:var(--red);margin-top:1.6rem;letter-spacing:.5rem}
+
+/* ============ ABOUT ============ */
+#about{position:relative;background:var(--navy);padding:clamp(4rem,9vw,8rem) 0;overflow:hidden}
+#about::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 16px);
+}
+#about .wrap{position:relative;z-index:2;width:min(1200px,92vw);margin:0 auto}
+#about .intro{max-width:720px;margin-top:1.2rem;line-height:1.75;font-size:clamp(.82rem,1.6vw,1rem);font-weight:700;opacity:.86}
+#about .intro b{color:var(--red)}
+.comic{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(1rem,2.4vw,1.6rem);margin-top:clamp(2rem,5vw,3.4rem)}
+.cell{
+  position:relative;background:var(--white);color:var(--black);border:6px solid var(--white);
+  padding:1.6rem 1.3rem 1.5rem;min-height:230px;
+  box-shadow:10px 10px 0 rgba(0,0,0,.6);
+  transition:transform .2s ease;
+}
+.cell:nth-child(odd){transform:rotate(-1.1deg)}
+.cell:nth-child(even){transform:rotate(1.1deg);background:var(--red);color:var(--white)}
+.cell:hover{transform:rotate(0deg) scale(1.04);z-index:5}
+.cell .year{font-size:clamp(2.4rem,7vw,3.6rem);line-height:1;color:var(--red)}
+.cell:nth-child(even) .year{color:var(--white);text-shadow:4px 4px 0 var(--black)}
+.cell h4{font-size:clamp(1rem,2.3vw,1.3rem);margin:.5rem 0 .55rem;line-height:1.2;text-transform:uppercase}
+.cell p{font-size:.74rem;line-height:1.7;font-weight:700;opacity:.85}
+.cell .star-mark{position:absolute;top:-.55rem;right:-.45rem;font-size:1.8rem;color:var(--gold);text-shadow:3px 3px 0 var(--black)}
+.tape{
+  position:absolute;width:92px;height:26px;background:rgba(255,215,0,.55);
+  border:2px solid rgba(0,0,0,.25);top:-12px;left:24px;transform:rotate(-6deg);
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.tape.t2{left:auto;right:22px;transform:rotate(5deg);background:rgba(230,0,18,.55)}
+
+/* ============ JOIN ============ */
+#join{position:relative;background:var(--white);color:var(--black);padding:clamp(4rem,9vw,8rem) 0 clamp(4.5rem,10vw,8rem)}
+#join .slant{position:absolute;left:-5%;right:-5%;top:-9%;height:130px;background:var(--black);clip-path:polygon(0 0,100% 0,100% 78%,0 100%)}
+#join .slant.r{background:var(--red);top:auto;bottom:-7%;height:70px;clip-path:polygon(0 40%,100% 0,100% 100%,0 100%)}
+#join .wrap{position:relative;z-index:2;width:min(1000px,92vw);margin:0 auto}
+.job{border:6px solid var(--black);background:var(--white);margin-top:clamp(1rem,2.4vw,1.6rem);transition:.15s;position:relative}
+.job-head{
+  width:100%;display:flex;align-items:center;gap:clamp(.7rem,2vw,1.4rem);
+  padding:clamp(.9rem,2.2vw,1.3rem);text-align:left;background:transparent;border:0;
+  color:inherit;font-size:clamp(.9rem,2.4vw,1.25rem);letter-spacing:.03em;
+}
+.job-head .play{width:0;opacity:0;overflow:hidden;color:var(--white);transition:width .2s ease,opacity .2s;flex:none}
+.job:hover .play{width:1.05em;opacity:1}
+.job-head .icon{font-size:clamp(1.5rem,4vw,2.1rem);flex:none;filter:grayscale(1) contrast(1.2);transition:.2s}
+.job-head .name{flex:1;min-width:0;text-transform:uppercase}
+.job-head .name small{display:block;font-size:.55em;letter-spacing:.18em;opacity:.6;font-weight:700}
+.job-head .salary{color:var(--red);font-size:clamp(.75rem,2vw,1rem);flex:none}
+.job-head .caret{color:var(--black);font-size:1.1em;transition:transform .25s}
+.job:hover{background:var(--red);border-color:var(--black);animation:jitter .16s steps(2) infinite;box-shadow:8px 8px 0 var(--black)}
+.job:hover .job-head,.job:hover .job-head .name small{color:var(--white)}
+.job:hover .salary{color:var(--gold)}
+.job:hover .caret{color:var(--white)}
+.job:hover .icon{filter:none;transform:scale(1.15)}
+.job.open{background:var(--black);color:var(--white)}
+.job.open .job-head{color:var(--white)}
+.job.open .salary{color:var(--gold)}
+.job.open .caret{transform:rotate(45deg);color:var(--red)}
+.job-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.job.open .job-panel{max-height:460px}
+.job-panel .inner{padding:0 clamp(1rem,2.4vw,1.6rem) 1.4rem;border-top:5px solid var(--red)}
+.job-panel h5{color:var(--red);font-size:.78rem;letter-spacing:.2em;margin:1rem 0 .4rem}
+.job-panel ul{list-style:none;font-size:.76rem;line-height:1.85;font-weight:700;opacity:.92}
+.job-panel ul li::before{content:"★ ";color:var(--red)}
+.join-note{margin-top:2rem;border:5px dashed var(--black);padding:1rem 1.2rem;font-size:.76rem;line-height:1.7;font-weight:700}
+
+/* ============ CONTACT ============ */
+#contact{position:relative;background:var(--black);padding:clamp(4rem,9vw,8rem) 0;overflow:hidden}
+#contact::before{
+  content:"";position:absolute;inset:0;opacity:.5;
+  background:repeating-conic-gradient(from 45deg at 100% 0,rgba(230,0,18,.4) 0 1deg,transparent 1deg 4deg);
+  -webkit-mask-image:linear-gradient(90deg,#000,transparent 60%);
+  mask-image:linear-gradient(90deg,#000,transparent 60%);
+}
+#contact .wrap{position:relative;z-index:2;width:min(1100px,92vw);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,5vw,4rem)}
+.info{list-style:none;margin-top:2rem}
+.info li{border-bottom:4px solid rgba(255,255,255,.18);padding:1rem .2rem;display:flex;gap:.8rem;align-items:flex-start}
+.info a,.info span.v{transition:.15s}
+.info li:hover a,.info li:hover span.v{color:var(--red);animation:jitter .16s steps(2) infinite}
+.info .s{color:var(--red);flex:none;font-size:1.2rem;line-height:1.2}
+.info .k{font-size:.6rem;letter-spacing:.24em;opacity:.55;display:block}
+.info .v{font-size:.9rem;word-break:break-all}
+form{display:flex;flex-direction:column;gap:1rem;margin-top:2rem}
+label{font-size:.62rem;letter-spacing:.24em;opacity:.7}
+input,textarea{
+  background:var(--black);border:5px solid var(--white);color:var(--white);
+  padding:.85rem 1rem;font-size:.85rem;font-weight:700;width:100%;outline:none;transition:.15s;
+}
+input:focus,textarea:focus{border-color:var(--red);box-shadow:6px 6px 0 var(--red);transform:translate(-2px,-2px)}
+textarea{min-height:130px;resize:vertical}
+.btn{
+  background:var(--red);color:var(--white);border:6px solid var(--white);padding:.9rem 1.4rem;
+  font-size:1rem;letter-spacing:.16em;text-transform:uppercase;box-shadow:8px 8px 0 var(--white);
+  transition:.15s;
+}
+.btn:hover{background:var(--gold);color:var(--black);animation:jitter .16s steps(2) infinite}
+.btn:active{transform:translate(6px,6px);box-shadow:0 0 0}
+.btn.sent{background:var(--gold);color:var(--black)}
+.btn.shake{animation:jitter .1s steps(2) 6}
+
+/* ============ FOOTER ============ */
+footer{background:var(--red);color:var(--black);padding:clamp(2.5rem,6vw,4rem) 1rem 1.6rem;text-align:center;position:relative;overflow:hidden}
+footer::before{
+  content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(0,0,0,.08) 0 3px,transparent 3px 14px);
+}
+footer .stars{position:relative;font-size:clamp(1.2rem,4vw,2rem);letter-spacing:.6rem;margin-bottom:1rem;animation:pulseStar 2.4s ease-in-out infinite}
+footer .copy{position:relative;font-size:clamp(.7rem,1.8vw,.95rem);letter-spacing:.14em;line-height:1.8}
+footer .links{position:relative;margin-top:1rem;display:flex;gap:1.4rem;justify-content:center;flex-wrap:wrap;font-size:.7rem;letter-spacing:.16em}
+footer .links a:hover{color:var(--white);animation:jitter .18s steps(2) infinite}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:900px){
+  .nav-menu{display:none}
+  .burger{display:block}
+  #contact .wrap{grid-template-columns:1fr}
+  #hero{min-height:100svh}
+  h1.hero-title{text-shadow:-4px -4px 0 var(--black),4px -4px 0 var(--black),-4px 4px 0 var(--black),4px 4px 0 var(--black),0 0 24px rgba(230,0,18,.5)}
+  .job-head{flex-wrap:wrap}
+  .job-head .salary{order:3;width:100%}
+}
+@media (max-width:560px){
+  .card:hover{transform:none}
+  .comic{grid-template-columns:1fr}
+  .cell:nth-child(odd),.cell:nth-child(even){transform:rotate(0)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor">★</div>
+
+<div id="loader">
+  <div class="l-star">★</div>
+  <div class="l-text">LOADING...</div>
+  <div class="bar-wrap"><div class="bar-fill" id="bar"></div></div>
+  <div class="bar-pct" id="pct">0%</div>
+</div>
+<div id="flash"></div>
+
+<nav>
+  <a href="#hero" class="logo"><span class="s">★</span> 喵喵Star<span class="s">★</span></a>
+  <ul class="nav-menu">
+    <li><a href="#games" data-nav>GAMES</a></li>
+    <li><a href="#about" data-nav>ABOUT</a></li>
+    <li><a href="#join" data-nav>JOIN</a></li>
+    <li><a href="#contact" data-nav>CONTACT</a></li>
+  </ul>
+  <button class="burger" id="burger" aria-label="MENU">MENU ★</button>
+</nav>
+
+<div id="mobileMenu">
+  <button class="close" id="closeMenu">CLOSE ✕</button>
+  <a href="#games">GAMES ★</a>
+  <a href="#about">ABOUT ★</a>
+  <a href="#join">JOIN ★</a>
+  <a href="#contact">CONTACT ★</a>
+</div>
+
+<header id="hero">
+  <div class="speedlines"></div>
+  <div id="p5host"></div>
+  <div class="hero-inner">
+    <div class="hero-star">★</div>
+    <h1 class="hero-title glitch" data-text="喵喵Star">喵喵Star</h1>
+    <p class="hero-en">MIAOMIAO STAR ★ RPG GAME STUDIO</p>
+    <p class="sub-title" id="subTitle"></p>
+    <p class="slogan"><span id="typeOut"></span><span class="caret">&nbsp;</span></p>
+    <div class="hero-tags">
+      <span class="tag">RPG DEVELOPER</span>
+      <span class="tag">EST.2019</span>
+      <span class="tag">SHENZHEN ★ TOKYO</span>
+    </div>
+  </div>
+  <div class="scroll-hint"><span>SCROLL</span><span class="arrow">▼</span></div>
+</header>
+
+<section id="games" class="light">
+  <div class="slant"></div>
+  <div class="slant b"></div>
+  <div class="wrap">
+    <h2 class="sec-title reveal"><span class="bar"></span>GAMES <span class="zh">游戏阵容 ★</span></h2>
+    <div class="grid-games">
+
+      <article class="card reveal" tabindex="0">
+        <div class="cover g1"><span>🚀</span></div>
+        <div class="card-body">
+          <div class="card-idx">01</div>
+          <h3>星轨传说</h3>
+          <div class="card-en">STAR TRAIL LEGEND</div>
+          <div class="card-genre">JRPG</div>
+          <p>跨越星海的命运 RPG。回合指令战斗 + 星际探索，500 万玩家的年度旅程。</p>
+        </div>
+      </article>
+
+      <article class="card reveal" tabindex="0">
+        <div class="cover g2"><span>🐱</span></div>
+        <div class="card-body">
+          <div class="card-idx">02</div>
+          <h3>喵喵大冒险</h3>
+          <div class="card-en">MEOW ADVENTURE</div>
+          <div class="card-genre">ACTION RPG</div>
+          <p>开放世界动作冒险。喵星人的热血旅程，实时连招与伙伴协战系统研发中。</p>
+        </div>
+      </article>
+
+      <article class="card reveal" tabindex="0">
+        <div class="cover g3"><span>⚔️</span></div>
+        <div class="card-body">
+          <div class="card-idx">03</div>
+          <h3>幻影战术</h3>
+          <div class="card-en">PHANTOM TACTICS</div>
+          <div class="card-genre">SRPG</div>
+          <p>棋盘即战场。策略深度 × 角色羁绊，每一次布阵都是一场心理博弈。</p>
+        </div>
+      </article>
+
+      <article class="card reveal" tabindex="0">
+        <div class="cover g4"><span>🌐</span></div>
+        <div class="card-body">
+          <div class="card-idx">04</div>
+          <h3>星辰 Online</h3>
+          <div class="card-en">STAR ONLINE</div>
+          <div class="card-genre">MMORPG</div>
+          <p>百万同服的星空大陆。公会战、跨服竞技，与伙伴共写属于你的传说。</p>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="divider-stars reveal">★ ★ ★ ★ ★ ★ ★ ★</div>
+  </div>
+</section>
+
+<section id="about" class="dark">
+  <div class="wrap">
+    <h2 class="sec-title reveal"><span class="bar"></span>ABOUT <span class="zh">冒险者公会 ★</span></h2>
+    <p class="intro reveal">我们是一群把<b>想象当作现实</b>的造梦者。自 2019 年起，喵喵Star 始终坚持一件事 —— 用最高规格的美术与系统，为玩家编织值得铭记的 RPG 世界。<br>★ 每一帧画面都要炸裂。★ 每一场战斗都要心跳。</p>
+    <div class="comic">
+
+      <div class="cell reveal">
+        <div class="tape"></div><div class="star-mark">★</div>
+        <div class="year">2019</div>
+        <h4>喵喵Star 成立</h4>
+        <p>五个人，一间地下室，一台租来的电脑。名为「喵喵Star」的工作室在深圳正式挂牌成立。</p>
+      </div>
+
+      <div class="cell reveal">
+        <div class="tape t2"></div><div class="star-mark">★</div>
+        <div class="year">2021</div>
+        <h4>首款作品上线</h4>
+        <p>《星轨传说》正式上线，首周登顶 iOS 畅销榜。我们第一次知道，玩家愿意为我们的世界熬夜。</p>
+      </div>
+
+      <div class="cell reveal">
+        <div class="tape"></div><div class="star-mark">★</div>
+        <div class="year">2023</div>
+        <h4>全球 500 万玩家</h4>
+        <p>《星轨传说》全球发行，覆盖 12 个语言版本，注册玩家突破 500 万，系列首部海外作品奖提名。</p>
+      </div>
+
+      <div class="cell reveal">
+        <div class="tape t2"></div><div class="star-mark">★</div>
+        <div class="year">2025</div>
+        <h4>新作研发中</h4>
+        <p>《喵喵大冒险》进入研发冲刺阶段，120 人团队，开放世界动作 RPG，敬请勇者加入。</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="join" class="light">
+  <div class="slant"></div>
+  <div class="slant r"></div>
+  <div class="wrap">
+    <h2 class="sec-title reveal"><span class="bar"></span>JOIN US <span class="zh">招募勇者 ★</span></h2>
+
+    <div class="job reveal">
+      <button class="job-head">
+        <span class="play">▶</span>
+        <span class="icon">🧙‍♂️</span>
+        <span class="name">高级游戏开发工程师<small>SENIOR GAME DEVELOPER</small></span>
+        <span class="salary">¥30-50K / 13薪</span>
+        <span class="caret">✚</span>
+      </button>
+      <div class="job-panel"><div class="inner">
+        <h5>职责 RESPONSIBILITIES</h5>
+        <ul><li>负责 RPG 核心战斗 / 剧情系统的架构设计与实现</li><li>主导技术方案评审，把控性能与内存预算</li><li>指导初中级工程师，参与技术沉淀与分享</li></ul>
+        <h5>要求 REQUIREMENTS</h5>
+        <ul><li>5 年以上游戏研发经验，C++ / C# 至少精通其一</li><li>有完整商业项目上线经验，熟稔 ECS 架构</li><li>对游戏手感与叙事有狂热的执念</li></ul>
+      </div></div>
+    </div>
+
+    <div class="job reveal">
+      <button class="job-head">
+        <span class="play">▶</span>
+        <span class="icon">🏹</span>
+        <span class="name">RPG 战斗策划<small>COMBAT DESIGNER</small></span>
+        <span class="salary">¥20-35K / 13薪</span>
+        <span class="caret">✚</span>
+      </button>
+      <div class="job-panel"><div class="inner">
+        <h5>职责 RESPONSIBILITIES</h5>
+        <ul><li>设计回合 / 实时战斗的技能、状态与数值框架</li><li>编写战斗关卡剧本并与程序、数值反复打磨</li><li>建立可量化的手感评测标准</li></ul>
+        <h5>要求 REQUIREMENTS</h5>
+        <ul><li>3 年以上战斗 / 系统策划经验，有 JRPG 项目背景优先</li><li>熟悉数值模型与 Excel / 表格驱动配置流程</li><li>玩过 30 款以上 RPG 并能写出独到分析</li></ul>
+      </div></div>
+    </div>
+
+    <div class="job reveal">
+      <button class="job-head">
+        <span class="play">▶</span>
+        <span class="icon">🎨</span>
+        <span class="name">角色原画师<small>CHARACTER ARTIST</small></span>
+        <span class="salary">¥18-30K / 13薪</span>
+        <span class="caret">✚</span>
+      </button>
+      <div class="job-panel"><div class="inner">
+        <h5>职责 RESPONSIBILITIES</h5>
+        <ul><li>负责角色立绘、表情差分与宣传插画的原画产出</li><li>参与角色设定企划，输出角色三视图与设定稿</li><li>与建模、灯光、UI 协作把控最终表现效果</li></ul>
+        <h5>要求 REQUIREMENTS</h5>
+        <ul><li>3 年以上商业原画经验，作品集完成度高</li><li>厚涂 / 半厚涂风格扎实，人体结构准确</li><li>能承受高强度产出节奏与改稿循环</li></ul>
+      </div></div>
+    </div>
+
+    <div class="job reveal">
+      <button class="job-head">
+        <span class="play">▶</span>
+        <span class="icon">🛡️</span>
+        <span class="name">游戏运营专员<small>GAME OPERATOR</small></span>
+        <span class="salary">¥12-20K / 13薪</span>
+        <span class="caret">✚</span>
+      </button>
+      <div class="job-panel"><div class="inner">
+        <h5>职责 RESPONSIBILITIES</h5>
+        <ul><li>负责版本节奏、活动策划与社区舆情日常运营</li><li>跟踪数据看板并输出运营复盘报告</li><li>策划玩家线下 / 线上活动，拉动用户活跃度</li></ul>
+        <h5>要求 REQUIREMENTS</h5>
+        <ul><li>2 年以上游戏运营经验，有 RPG 品类经验优先</li><li>熟练使用 SQL / Excel 进行数据分析</li><li>文笔好、玩过大量社交平台梗</li></ul>
+      </div></div>
+    </div>
+
+    <div class="join-note reveal">
+      ★ 没有看到合适的岗位？把简历投给 <b>talent@miaomiaostar.com</b>，我们会把它存进勇者名册。<br>
+      ★ 提供：六险一金 · 弹性工作 · 无限周边 · 年度游戏基金 · 零食不断粮
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="dark">
+  <div class="wrap">
+    <div>
+      <h2 class="sec-title reveal"><span class="bar"></span>CONTACT <span class="zh">联络站 ★</span></h2>
+      <ul class="info">
+        <li><span class="s">★</span><span><span class="k">EMAIL 邮箱</span><a href="mailto:hello@miaomiaostar.com">HELLO@MIAOMIAOSTAR.COM</a></span></li>
+        <li><span class="s">★</span><span><span class="k">PRESS 商务 / 媒体</span><a href="mailto:press@miaomiaostar.com">PRESS@MIAOMIAOSTAR.COM</a></span></li>
+        <li><span class="s">★</span><span><span class="k">HQ 总部</span><span class="v">深圳市南山区科技园 ★ 星轨大厦 27F</span></span></li>
+        <li><span class="s">★</span><span><span class="k">STUDIO 东京分部</span><span class="v">東京都渋谷区 ★ 神宮前 2-11-6</span></span></li>
+        <li><span class="s">★</span><span><span class="k">SOCIAL 关注我们</span><span class="v"><a href="#">WECHAT ★ MIAOMIAOSTAR</a> / <a href="#">BILIBILI ★ 喵喵Star</a> / <a href="#">X ★ MIAOMIAO_STAR</a></span></span></li>
+        <li><span class="s">★</span><span><span class="k">HOURS 服务时间</span><span class="v">周一至周五 10:00 — 19:00 (GMT+8)</span></span></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="reveal" style="font-size:clamp(1rem,2.4vw,1.3rem);letter-spacing:.12em;margin-top:2rem">SEND A MESSAGE ★ 联络我们</h3>
+      <form id="contactForm" class="reveal" novalidate>
+        <div>
+          <label for="name">YOUR NAME 勇者名</label>
+          <input id="name" type="text" placeholder="ARTHUR / 亚瑟" required>
+        </div>
+        <div>
+          <label for="mail">EMAIL 邮箱</label>
+          <input id="mail" type="email" placeholder="hero@world.com" required>
+        </div>
+        <div>
+          <label for="msg">MESSAGE 内容</label>
+          <textarea id="msg" placeholder="TAKE YOUR STAR ★"></textarea>
+        </div>
+        <button class="btn" type="submit" id="sendBtn">SEND ★ 发送情报</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="stars">★ ★ ★ ★ ★ ★ ★ ★</div>
+  <div class="copy">© 2026 喵喵Star ★ ALL RIGHTS RESERVED<br>MIAOMIAO STAR ★ WE CRAFT RPG WORLDS</div>
+  <div class="links">
+    <a href="#games">GAMES</a><a href="#about">ABOUT</a><a href="#join">JOIN</a><a href="#contact">CONTACT</a><a href="#">PRIVACY</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- CURSOR ---------- */
+  var cur = document.getElementById('cursor');
+  var cx = 0, cy = 0, tx = 0, ty = 0;
+  window.addEventListener('mousemove', function(e){
+    tx = e.clientX; ty = e.clientY;
+    cur.style.opacity = '1';
+  });
+  (function loop(){
+    cx += (tx - cx) * .22; cy += (ty - cy) * .22;
+    cur.style.transform = 'translate(' + cx + 'px,' + cy + 'px) translate(-50%,-50%)';
+    requestAnimationFrame(loop);
+  })();
+  document.addEventListener('mouseover', function(e){
+    if (e.target.closest('a,button,input,textarea,.card,.job')) cur.classList.add('small');
+  });
+  document.addEventListener('mouseout', function(e){
+    if (e.target.closest('a,button,input,textarea,.card,.job')) cur.classList.remove('small');
+  });
+
+  /* ---------- LOADER ---------- */
+  var bar = document.getElementById('bar'), pct = document.getElementById('pct');
+  var loader = document.getElementById('loader'), flash = document.getElementById('flash');
+  var p = 0;
+  var timer = setInterval(function(){
+    p += Math.random() * 16 + 5;
+    if (p >= 100){ p = 100; clearInterval(timer); }
+    bar.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+    if (p >= 100){
+      setTimeout(function(){
+        flash.classList.add('go');
+        loader.style.transition = 'opacity .3s';
+        loader.style.opacity = '0';
+        setTimeout(function(){
+          loader.style.display = 'none';
+          document.body.classList.remove('no-scroll');
+          heroIntro();
+        }, 320);
+      }, 260);
+    }
+  }, 130);
+  document.body.classList.add('no-scroll');
+
+  /* ---------- HERO INTRO ---------- */
+  function heroIntro(){
+    document.getElementById('hero').classList.add('ready');
+    var txt = Array.from('TAKE YOUR STAR ★');
+    var host = document.getElementById('subTitle');
+    txt.forEach(function(ch, i){
+      var s = document.createElement('span');
+      s.textContent = ch === ' ' ? '\u00A0' : ch;
+      s.style.animationDelay = (i * 0.07) + 's';
+      host.appendChild(s);
+    });
+  }
+
+  /* ---------- TYPEWRITER ---------- */
+  var slogans = [
+    'WE CRAFT RPG WORLDS',
+    'YOUR ADVENTURE STARTS HERE',
+    'BEYOND REALITY ★ BEYOND IMAGINATION'
+  ];
+  var out = document.getElementById('typeOut');
+  var si = 0, ci = 0, deleting = false;
+  function type(){
+    var s = slogans[si];
+    ci += deleting ? -1 : 1;
+    out.textContent = s.slice(0, ci);
+    var wait = deleting ? 32 : 62;
+    if (!deleting && ci === s.length){ deleting = true; wait = 1900; }
+    else if (deleting && ci === 0){ deleting = false; si = (si + 1) % slogans.length; wait = 420; }
+    setTimeout(type, wait);
+  }
+  setTimeout(type, 900);
+
+  /* ---------- SCROLL REVEAL ---------- */
+  var revs = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){
+          var sibs = Array.prototype.indexOf.call(en.target.parentNode.children, en.target);
+          en.target.style.transitionDelay = Math.min(sibs, 6) * 0.07 + 's';
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: .14, rootMargin: '0px 0px -8% 0px' });
+    revs.forEach(function(r){ io.observe(r); });
+  } else {
+    revs.forEach(function(r){ r.classList.add('in'); });
+  }
+
+  /* ---------- NAV SPY ---------- */
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('[data-nav]'));
+  var sections = navLinks.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function spy(){
+    var pos = window.scrollY + window.innerHeight * 0.35;
+    var idx = -1;
+    sections.forEach(function(s, i){ if (s && s.offsetTop <= pos) idx = i; });
+    navLinks.forEach(function(a, i){ a.classList.toggle('active', i === idx); });
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+
+  /* ---------- MOBILE MENU ---------- */
+  var burger = document.getElementById('burger'), mm = document.getElementById('mobileMenu');
+  function openMM(){ mm.classList.add('open'); document.body.classList.add('no-scroll'); }
+  function closeMM(){ mm.classList.remove('open'); document.body.classList.remove('no-scroll'); }
+  burger.addEventListener('click', openMM);
+  document.getElementById('closeMenu').addEventListener('click', closeMM);
+  mm.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMM); });
+
+  /* ---------- GAME CARD FLASH ---------- */
+  document.querySelectorAll('.card').forEach(function(card){
+    function go(){
+      flash.style.animation = 'none';
+      void flash.offsetWidth;
+      flash.style.animation = 'flashOut .5s ease-out forwards';
+    }
+    card.addEventListener('click', go);
+    card.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); }
+    });
+  });
+
+  /* ---------- JOB ACCORDION ---------- */
+  document.querySelectorAll('.job').forEach(function(job){
+    job.querySelector('.job-head').addEventListener('click', function(){
+      var open = job.classList.contains('open');
+      document.querySelectorAll('.job.open').forEach(function(j){ j.classList.remove('open'); });
+      if (!open) job.classList.add('open');
+    });
+  });
+
+  /* ---------- FORM ---------- */
+  var form = document.getElementById('contactForm'), sendBtn = document.getElementById('sendBtn');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('name'), mail = document.getElementById('mail');
+    if (!name.value.trim() || !mail.value.trim()){
+      [name, mail].forEach(function(f){
+        if (!f.value.trim()){
+          f.style.borderColor = '#E60012';
+          sendBtn.classList.add('shake');
+          setTimeout(function(){ sendBtn.classList.remove('shake'); }, 600);
+        }
+      });
+      return;
+    }
+    sendBtn.classList.add('shake');
+    setTimeout(function(){ sendBtn.classList.remove('shake'); }, 600);
+    sendBtn.classList.add('sent');
+    sendBtn.textContent = 'MESSAGE SENT ★';
+    form.reset();
+    setTimeout(function(){
+      sendBtn.classList.remove('sent');
+      sendBtn.textContent = 'SEND ★ 发送情报';
+    }, 2400);
+  });
+  form.querySelectorAll('input').forEach(function(i){
+    i.addEventListener('input', function(){ i.style.borderColor = ''; });
+  });
+
+  /* ---------- p5 STAR PARTICLES ---------- */
+  var isSmall = window.matchMedia('(max-width:900px)').matches;
+  var reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if (typeof p5 === 'undefined' || reduce){
+    var host = document.getElementById('p5host');
+    if (host && !reduce){
+      for (var k = 0; k < 18; k++){
+        var st = document.createElement('div');
+        st.textContent = '★';
+        st.style.cssText = 'position:absolute;color:#E60012;font-size:' + (8 + Math.random() * 14) +
+          'px;left:' + Math.random() * 100 + '%;top:' + Math.random() * 100 +
+          '%;opacity:.5;animation:starPop ' + (2 + Math.random() * 3) + 's ease-in-out infinite';
+        host.appendChild(st);
+      }
+    }
+    return;
+  }
+  var COUNT = isSmall ? 26 : 70;
+  new p5(function(p){
+    var parts = [];
+    p.setup = function(){
+      var h = document.getElementById('hero').offsetHeight;
+      var c = p.createCanvas(window.innerWidth, h);
+      c.parent('p5host');
+      p.noStroke();
+      for (var i = 0; i < COUNT; i++) parts.push(make());
+      function make(){
+        var a = p.random(p.TWO_PI), sp = p.random(1.4, 6.2);
+        return {
+          x: window.innerWidth / 2, y: h * 0.45,
+          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+          s: p.random(6, 22), life: 255, fade: p.random(2.2, 5.2),
+          rot: p.random(p.TWO_PI), spin: p.random(-0.12, 0.12)
+        };
+      }
+      p.make = make;
+    };
+    p.draw = function(){
+      p.clear();
+      for (var i = 0; i < parts.length; i++){
+        var q = parts[i];
+        q.x += q.vx; q.y += q.vy;
+        q.vy += 0.045; q.vx *= 0.992; q.vy *= 0.992;
+        q.rot += q.spin; q.life -= 255 / q.fade;
+        var gold = (i % 7 === 0);
+        p.push();
+        p.translate(q.x, q.y);
+        p.rotate(q.rot);
+        p.fill(gold ? p.color(255, 215, 0, q.life) : p.color(230, 0, 18, q.life));
+        p.textSize(q.s);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.text('★', 0, 0);
+        p.pop();
+        if (q.life <= 0 || q.y > p.height + 40) parts[i] = p.make();
+      }
+    };
+    p.windowResized = function(){
+      p.resizeCanvas(window.innerWidth, document.getElementById('hero').offsetHeight);
+    };
+  });
+})();
+</script>
+</body>
+</html>
